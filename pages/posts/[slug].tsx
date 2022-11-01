@@ -1,16 +1,20 @@
-import { useRouter } from 'next/router'
+import Head from 'next/head'
 import ErrorPage from 'next/error'
+import { useRouter } from 'next/router'
+
+import type PostType from '../../interfaces/post'
+
+import Header from '../../components/header'
+import Layout from '../../components/layout'
 import Container from '../../components/container'
 import PostBody from '../../components/post-body'
-import Header from '../../components/header'
-import PostHeader from '../../components/post-header'
-import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts } from '../../lib/api'
 import PostTitle from '../../components/post-title'
-import Head from 'next/head'
+import PostHeader from '../../components/post-header'
+
 import { CMS_NAME } from '../../lib/constants'
+import { useComments } from '../../lib/useComments'
 import markdownToHtml from '../../lib/markdownToHtml'
-import type PostType from '../../interfaces/post'
+import { getPostBySlug, getAllPosts } from '../../lib/api'
 
 type Props = {
   post: PostType
@@ -19,10 +23,16 @@ type Props = {
 }
 
 export default function Post({ post, morePosts, preview }: Props) {
+  const comments = useComments("https://united-bear-12.hasura.app/v1/graphql", post.slug)
+
+  console.log(comments);
+
   const router = useRouter()
+
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
+
   return (
     <Layout preview={preview}>
       <Container>
