@@ -10,10 +10,12 @@ import Container from '../../components/container'
 import PostBody from '../../components/post-body'
 import PostTitle from '../../components/post-title'
 import PostHeader from '../../components/post-header'
+import PostAddComment from '../../components/post-add-comment'
 import PostComments from '../../components/post-comments'
 
 import { CMS_NAME } from '../../lib/constants'
 import markdownToHtml from '../../lib/markdownToHtml'
+import { useComments } from '../../lib/useComments'
 import { getPostBySlug, getAllPosts } from '../../lib/api'
 
 type Props = {
@@ -24,6 +26,13 @@ type Props = {
 
 export default function Post({ post, morePosts, preview }: Props) {
   const router = useRouter()
+  const { 
+    loading, 
+    adding,
+    error,
+    comments,
+    addComment
+  } = useComments(process.env.NEXT_PUBLIC_HASURA_URL, post.slug)
 
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
@@ -51,7 +60,8 @@ export default function Post({ post, morePosts, preview }: Props) {
                 author={post.author}
               />
               <PostBody content={post.content} />
-              <PostComments slug={post.slug} />
+              <PostAddComment adding={adding} addComment={addComment} />
+              <PostComments loading={loading} comments={comments} error={error} />
             </article>
           </>
         )}
