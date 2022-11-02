@@ -10,9 +10,9 @@ import Container from '../../components/container'
 import PostBody from '../../components/post-body'
 import PostTitle from '../../components/post-title'
 import PostHeader from '../../components/post-header'
+import PostComments from '../../components/post-comments'
 
 import { CMS_NAME } from '../../lib/constants'
-import { useComments } from '../../lib/useComments'
 import markdownToHtml from '../../lib/markdownToHtml'
 import { getPostBySlug, getAllPosts } from '../../lib/api'
 
@@ -24,7 +24,6 @@ type Props = {
 
 export default function Post({ post, morePosts, preview }: Props) {
   const router = useRouter()
-  const {comments, loading} = useComments(process.env.NEXT_PUBLIC_HASURA_URL, post.slug)
 
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
@@ -52,24 +51,7 @@ export default function Post({ post, morePosts, preview }: Props) {
                 author={post.author}
               />
               <PostBody content={post.content} />
-
-              <section className="pt-6 max-w-2xl mx-auto">
-                <h3 className="font-bold text-xm">
-                  {comments.length === 1 ? "1 comment" : `${comments.length} comments`}
-                </h3>
-                {loading
-                  ? "Loading comments..."
-                  : comments.map(({ author, content, created_at }) => (
-                      <article key={created_at} className="bg-gray-100 rounded my-6">
-                        <div className="px-6 py-4">
-                          <div className="font-bold text-xm mb-2">
-                            {author} ・ {new Date(created_at).toLocaleDateString()}
-                          </div>
-                          <p className="text-gray-700 text-base">{content}</p>
-                        </div>
-                      </article>
-                ))}
-              </section>
+              <PostComments slug={post.slug} />
             </article>
           </>
         )}
