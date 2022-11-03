@@ -12,7 +12,12 @@ export default function PostAddComment({ adding, addComment }: Props) {
   const [comment, setComment] = useState("");
 
   const disableSubmit = adding || username.length === 0 || comment.length === 0;
-  const onSubmit = ({ content, author }: Pick<Comment, "content" | "author">) => addComment({ content, author});
+
+  const onSubmit = ({ content, author }: Pick<Comment, "content" | "author">) => {
+    addComment({ content, author });
+    setUsername("");
+    setComment("");
+  };
 
   return (
     <form

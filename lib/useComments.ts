@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import http from "./httpClient";
 
 const getCommentsQuery = `
 query GetComments($topic: String!) {
   comments(where: {topic: {_eq: $topic}}, order_by: {created_at: desc}) {
+    id
     topic
     author
     content
@@ -23,6 +25,7 @@ mutation AddComment($topic: String!, $author: String!, $content: String!) {
 `;
 
 export interface Comment {
+  id: number;
   author: string;
   content: string;
   created_at: string;
@@ -42,10 +45,7 @@ export interface UseCommentsResult {
   addComment: AddComment;
 }
 
-export const useComments = (
-  hasuraUrl: string,
-  topic: string
-): UseCommentsResult => {
+export const useComments = (topic: string): UseCommentsResult => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,33 +54,28 @@ export const useComments = (
   const fetchComments = () => {
     setLoading(true);
 
-    fetch(hasuraUrl, {
-      method: "POST",
-      headers: {
-        "x-hasura-role": "anonymous",
-        "Content-type": "application/json",
+    const req = JSON.stringify({
+      query: getCommentsQuery,
+      variables: {
+        topic,
       },
-      body: JSON.stringify({
-        query: getCommentsQuery,
-        variables: {
-          topic,
-        },
-      }),
+    });
+
+    http.post("v1/graphql", req)
+    .then(({ data }) => {
+      if (data.errors && data.errors.length) {
+        setError(data.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
+      setComments(data.data.comments);
+      setLoading(false);
     })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.errors && res.errors.length) {
-          setError(res.errors[0].message);
-          setLoading(false);
-          return;
-        }
-        setComments(res.data.comments);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err);
-        setLoading(false);
-      });
+    .catch((err) => {
+      setError(err);
+      setLoading(false);
+    });
   };
 
   const addComment = ({
@@ -89,36 +84,30 @@ export const useComments = (
   }: Pick<Comment, "content" | "author">) => {
     setAdding(true);
 
-    fetch(hasuraUrl, {
-      method: "POST",
-      headers: {
-        "x-hasura-role": "anonymous",
-        "Content-type": "application/json",
+    const req = JSON.stringify({
+      query: addCommentMutation,
+      variables: {
+        topic,
+        author,
+        content,
       },
-      body: JSON.stringify({
-        query: addCommentMutation,
-        variables: {
-          topic,
-          content,
-          author,
-        },
-      }),
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.errors && res.errors.length) {
-          setError(res.errors[0].message);
-          setAdding(false);
-          return;
-        }
+    });
 
+    http.post("v1/graphql", req)
+    .then(({ data }) => {
+      if (data.errors && data.errors.length) {
+        setError(data.errors[0].message);
         setAdding(false);
-        fetchComments();
-      })
-      .catch((err) => {
-        setError(err);
-        setAdding(false);
-      });
+        return;
+      }
+
+      setAdding(false);
+      fetchComments();
+    })
+    .catch((err) => {
+      setError(err);
+      setAdding(false);
+    });
   };
 
   useEffect(fetchComments, []);
