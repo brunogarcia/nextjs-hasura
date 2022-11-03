@@ -1,12 +1,20 @@
-import user from "@testing-library/user-event";
+import userEvent from "@testing-library/user-event";
 import { render, waitFor } from "@testing-library/react";
 
 import PostComments from "../post-comments";
+import React from "react";
+
+function setup(jsx: React.ReactElement) {
+  return {
+    user: userEvent.setup(),
+    ...render(jsx),
+  }
+}
 
 describe(PostComments, () => {
   describe(PostComments, () => {
     it("renders existing comments from API", async () => {
-      const { findByText } = render(
+      const { findByText } = setup(
         <PostComments postSlug="test" />
       );
 
@@ -20,20 +28,25 @@ describe(PostComments, () => {
     });
 
     it("renders a new comment when added", async () => {
-      const { findByText, findByLabelText } = render(
+      const { user, findByText, findByLabelText } = setup(
         <PostComments postSlug="test" />
       );
 
       const nameInput = await findByLabelText("Name");
-      const textarea = await findByLabelText("Comment");
-      const button = await findByText("Add comment");
+      const commentTextarea = await findByLabelText("Comment");
+      const submitButton = await findByText("Add comment");
 
-      user.type(nameInput, "Tester");
-      user.type(textarea, "What's up?");
-      user.click(button);
+      await user.type(nameInput, "Tester");
+      await user.type(commentTextarea, "What's up?");
+      await user.click(submitButton);
 
       await waitFor(async () => {
-        await findByText(/Loading comments/);
+        await findByText(/Sending/);
+      });
+
+      await waitFor(async () => {
+        await findByText("3 comments");
+        await findByText("What's up?");
       });
     });
   });

@@ -69,7 +69,7 @@ export default function PostAddComment({ adding, addComment }: Props) {
         {
          adding ? (
           <Spinner>
-            <span>Sending...</span>
+            <span>Sending</span>
             </Spinner>
           ) :  "Add comment"
         }
