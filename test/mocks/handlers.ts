@@ -1,30 +1,28 @@
 import { graphql } from "msw";
 
-import type {
-  Comment,
-} from "../../lib/useComments";
+import { type Comment, CommentStatus } from "../../lib/useComments";
 
 const comments: Comment[] = [
   {
-    id: 1,
+    topic: "test",
     author: "Bruno",
     content: "Just testing",
+    status: CommentStatus.Added,
     created_at: new Date().toString(),
-    topic: "test",
   },
   {
-    id: 2,
+    topic: "dogs",
     author: "Eva",
     content: "What a cute dog!",
+    status: CommentStatus.Added,
     created_at: new Date().toString(),
-    topic: "dogs",
   },
   {
-    id: 3,
+    topic: "test",
     author: "Eva",
     content: "Testing some more",
+    status: CommentStatus.Added,
     created_at: new Date().toString(),
-    topic: "test",
   },
 ];
 
@@ -39,10 +37,10 @@ export const handlers = [
   graphql.mutation("AddComment", (req, res, ctx) => {
     const { author, content, topic } = req.variables;
     const comment = {
-      id: comments.length + 1,
       topic,
       author,
       content,
+      status: CommentStatus.Added,
       created_at: new Date().toString(),
     };
 

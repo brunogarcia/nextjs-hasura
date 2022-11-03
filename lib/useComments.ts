@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import shallowEqual from "../utils/shallowEqual";
 import http from "./httpClient";
 
 const getCommentsQuery = `
@@ -24,12 +25,18 @@ mutation AddComment($topic: String!, $author: String!, $content: String!) {
 }
 `;
 
+export enum CommentStatus {
+  Added = "added",
+  Adding = "adding",
+  Failed = "failed",
+}
+
 export interface Comment {
-  id: number;
   author: string;
   content: string;
   created_at: string;
   topic: string;
+  status: CommentStatus;
 }
 
 export type AddComment = ({
@@ -46,10 +53,11 @@ export interface UseCommentsResult {
 }
 
 export const useComments = (topic: string): UseCommentsResult => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+
 
   const fetchComments = () => {
     setLoading(true);
@@ -82,7 +90,16 @@ export const useComments = (topic: string): UseCommentsResult => {
     content,
     author,
   }: Pick<Comment, "content" | "author">) => {
+    const newComment: Comment = {
+      author,
+      content,
+      topic,
+      status: CommentStatus.Adding,
+      created_at: new Date().toISOString(),
+    };
+
     setAdding(true);
+    setComments((prev) => [newComment, ...prev]);
 
     const req = JSON.stringify({
       query: addCommentMutation,
@@ -101,11 +118,31 @@ export const useComments = (topic: string): UseCommentsResult => {
         return;
       }
 
+      setComments((prev) =>
+        prev.map((comment) =>
+          shallowEqual(comment, newComment)
+            ? {
+                ...newComment,
+                status: CommentStatus.Added,
+              }
+            : comment
+        )
+      );
+
       setAdding(false);
-      fetchComments();
     })
     .catch((err) => {
-      setError(err);
+      setComments((prev) =>
+        prev.map((comment) =>
+          shallowEqual(comment, newComment)
+            ? {
+                ...newComment,
+                status: CommentStatus.Failed,
+              }
+            : comment
+        )
+      );
+
       setAdding(false);
     });
   };
@@ -114,8 +151,8 @@ export const useComments = (topic: string): UseCommentsResult => {
 
   return {
     error,
-    loading,
     adding,
+    loading,
     comments,
     addComment,
   };

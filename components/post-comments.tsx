@@ -1,5 +1,5 @@
 import PostComment from './post-comment'
-import PostAddComment from '../components/post-add-comment'
+import PostAddComment from './post-add-comment'
 import { useComments } from '../lib/useComments'
 
 type Props = {
@@ -8,9 +8,9 @@ type Props = {
 
 export default function PostComments({ postSlug }: Props) {
   const {
-    loading,
-    adding,
     error,
+    adding,
+    loading,
     comments,
     addComment
   } = useComments(postSlug)
@@ -27,7 +27,7 @@ export default function PostComments({ postSlug }: Props) {
                 {comments.length === 1 ? "1 comment" : `${comments.length} comments`}
               </h3>
               <div>
-                {comments.map((comment) => <PostComment key={comment.id} {...comment} />)}
+                {comments.map((comment, index) => <PostComment key={index} {...comment} />)}
               </div>
             </>
         }
