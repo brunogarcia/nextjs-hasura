@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Spinner from './spinner'
-import type { Comment, AddComment } from '../lib/useComments'
+import type { Comment, AddComment } from '../hooks/useComments'
 
 type Props = {
   adding: boolean;

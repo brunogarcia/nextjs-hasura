@@ -1,15 +1,25 @@
 import { useState, useEffect } from "react";
+import http from "../lib/httpClient";
 import shallowEqual from "../utils/shallowEqual";
-import http from "./httpClient";
 
 const getCommentsQuery = `
-query GetComments($topic: String!) {
-  comments(where: {topic: {_eq: $topic}}, order_by: {created_at: desc}) {
+query GetComments($topic: String!, $limit: Int, $offset: Int) {
+  comments(
+    where: { topic: { _eq: $topic } }
+    limit: $limit
+    offset: $offset
+    order_by: { created_at: desc }
+  ) {
     id
     topic
     author
     content
     created_at
+  }
+  comments_aggregate(where: { topic: { _eq: $topic } }) {
+    aggregate {
+      count
+    }
   }
 }
 `;
@@ -45,6 +55,7 @@ export type AddComment = ({
 }: Pick<Comment, "content" | "author">) => void;
 
 export interface UseCommentsResult {
+  count: number;
   loading: boolean;
   adding: boolean;
   error: string | null;
@@ -52,7 +63,10 @@ export interface UseCommentsResult {
   addComment: AddComment;
 }
 
-export const useComments = (topic: string): UseCommentsResult => {
+interface UseCommentConfig { limit?: number, offset?: number }
+
+export const useComments = (topic: string, config?: UseCommentConfig): UseCommentsResult => {
+  const [count, setCount] = useState(0);
   const [adding, setAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +80,8 @@ export const useComments = (topic: string): UseCommentsResult => {
       query: getCommentsQuery,
       variables: {
         topic,
+        ...(config?.limit && { limit: config.limit }),
+        ...(config?.offset && { offset: config.offset }),
       },
     });
 
@@ -78,6 +94,7 @@ export const useComments = (topic: string): UseCommentsResult => {
       }
 
       setComments(data.data.comments);
+      setCount(data.data.comments_aggregate.aggregate.count);
       setLoading(false);
     })
     .catch((err) => {
@@ -147,9 +164,10 @@ export const useComments = (topic: string): UseCommentsResult => {
     });
   };
 
-  useEffect(fetchComments, []);
+  useEffect(fetchComments, [config?.limit, config?.offset]);
 
   return {
+    count,
     error,
     adding,
     loading,

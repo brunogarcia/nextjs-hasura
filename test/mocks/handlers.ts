@@ -1,6 +1,6 @@
 import { graphql } from "msw";
 
-import { type Comment, CommentStatus } from "../../lib/useComments";
+import { type Comment, CommentStatus } from "../../hooks/useComments";
 
 const comments: Comment[] = [
   {

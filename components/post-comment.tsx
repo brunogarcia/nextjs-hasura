@@ -1,4 +1,4 @@
-import type { Comment } from '../lib/useComments'
+import type { Comment } from '../hooks/useComments'
 
 export default function PostComments(comment: Comment) {
   const { author, content, status, created_at } = comment

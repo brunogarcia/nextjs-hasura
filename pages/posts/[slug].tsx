@@ -2,7 +2,7 @@ import Head from 'next/head'
 import ErrorPage from 'next/error'
 import { useRouter } from 'next/router'
 
-import type PostType from '../../interfaces/post'
+import type PostType from '../../types/post'
 
 import Header from '../../components/header'
 import Layout from '../../components/layout'
@@ -51,7 +51,7 @@ export default function Post({ post, morePosts, preview }: Props) {
                 author={post.author}
               />
               <PostBody content={post.content} />
-              <PostComments postSlug={post.slug} />
+              <PostComments topic={post.slug} />
             </article>
           </>
         )}
